@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 setcookie("remembered_email", $_POST['email'], time() + (86400 * 30), "/");
 
                
-                header("Location: index.php?status=success");
+                header("Location: cadastro_sucesso.php?status=success");
                 exit();
             } else {
                 $erro = "Falha ao cadastrar. Tente novamente. Erro: " . $stmt->error;
