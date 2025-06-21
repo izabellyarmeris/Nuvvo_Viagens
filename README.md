@@ -1,8 +1,7 @@
 # ✈️ NUVSO Viagens
 
 Bem-vindo ao repositório do NUVSO Viagens, um portal web dinâmico e interativo para uma agência de viagens fictícia. O projeto foi desenvolvido como uma demonstração completa de funcionalidades de front-end e back-end, incluindo autenticação de usuários, páginas protegidas e interatividade com JavaScript.
-
-![Prévia da Página de Pacotes](https://i.imgur.com/uT0mF5R.png) 
+ 
 ---
 
 ## 🚀 Funcionalidades Principais
