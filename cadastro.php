@@ -3,11 +3,9 @@
 include('php/conexao.php');
 
 $erro = null;
-$sucesso = null;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-  
     if (empty($_POST['nome']) || empty($_POST['sobrenome']) || empty($_POST['email']) || empty($_POST['senha'])) {
         $erro = "Todos os campos são obrigatórios.";
     } else if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
@@ -17,37 +15,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else if ($_POST['senha'] !== $_POST['confirmar_senha']) {
         $erro = "As senhas não coincidem.";
     } else {
-   
-        $email = $mysqli->real_escape_string($_POST['email']);
-        $sql_check = "SELECT id FROM usuarios WHERE email = '$email'";
-        $result_check = $mysqli->query($sql_check);
-
-        if ($result_check->num_rows > 0) {
-            $erro = "Este e-mail já está cadastrado.";
-        } else {
+        
+        try {
          
-            $nome = $mysqli->real_escape_string($_POST['nome']);
-            $sobrenome = $mysqli->real_escape_string($_POST['sobrenome']);
-            $dataNasc = $mysqli->real_escape_string($_POST['dataNasc']);
+            $email = $_POST['email'];
+            $sql_check = "SELECT id FROM usuarios WHERE email = :email";
+            $stmt_check = $pdo->prepare($sql_check);
+            $stmt_check->execute(['email' => $email]);
 
-                        $senha_hash = password_hash($_POST['senha'], PASSWORD_DEFAULT);
-            $stmt = $mysqli->prepare("INSERT INTO usuarios (nome, sobrenome, data_nascimento, email, senha) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssss", $nome, $sobrenome, $dataNasc, $email, $senha_hash);
-
-            if ($stmt->execute()) {
-              
-                setcookie("remembered_email", $_POST['email'], time() + (86400 * 30), "/");
-
-               
-                header("Location: cadastro_sucesso.php?status=success");
-                exit();
+            if ($stmt_check->rowCount() > 0) {
+                $erro = "Este e-mail já está cadastrado.";
             } else {
-                $erro = "Falha ao cadastrar. Tente novamente. Erro: " . $stmt->error;
+           
+                $nome = $_POST['nome'];
+                $sobrenome = $_POST['sobrenome'];
+                $dataNasc = $_POST['dataNasc'];
+                $senha_hash = password_hash($_POST['senha'], PASSWORD_DEFAULT);
+
+                $sql_insert = "INSERT INTO usuarios (nome, sobrenome, data_nascimento, email, senha) VALUES (:nome, :sobrenome, :data_nascimento, :email, :senha)";
+                $stmt_insert = $pdo->prepare($sql_insert);
+                $stmt_insert->execute([
+                    'nome' => $nome,
+                    'sobrenome' => $sobrenome,
+                    'data_nascimento' => $dataNasc,
+                    'email' => $email,
+                    'senha' => $senha_hash
+                ]);
+
+                setcookie("remembered_email", $_POST['email'], time() + (86400 * 30), "/");
+                header("Location: cadastro_sucesso.php");
+                exit();
             }
-            $stmt->close();
+        } catch (PDOException $e) {
+          
+            $erro = "Falha ao interagir com o banco de dados: " . $e->getMessage();
         }
     }
-    $mysqli->close();
 }
 ?>
 <!DOCTYPE html>
