@@ -1,12 +1,12 @@
 <?php
-
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+
 $host = getenv('MYSQLHOST');
-$db   = getenv('MYSQLDATABASE');
-$user = getenv('MYSQLUSER');
-$pass = getenv('MYSQLPASSWORD');
+$db   = getenv('BANCO_DE_DADOS_MYSQL'); // Corrigido
+$user = getenv('USUARIO_MYSQL');      // Corrigido
+$pass = getenv('SENHA_ROOT_MYSQL');   // Corrigido
 $port = getenv('MYSQLPORT');
 
 

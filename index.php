@@ -2,36 +2,50 @@
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-header('Content-Type: text/plain; charset=utf-8');
 
-echo "=====================================================\n";
-echo "DIAGNÓSTICO DE VARIÁVEIS DE AMBIENTE DO RAILWAY\n";
-echo "=====================================================\n\n";
-
-echo "--- VERIFICANDO VARIÁVEIS DO BANCO DE DADOS ---\n";
-
-$db_host = getenv('MYSQLHOST');
-$db_name = getenv('MYSQLDATABASE');
-$db_user = getenv('MYSQLUSER');
-$db_pass_exists = getenv('MYSQLPASSWORD') !== false;
-
-if (!empty($db_host)) {
-    echo "✅ SUCESSO! Variáveis do MySQL foram encontradas:\n";
-    echo "MYSQLHOST:     " . $db_host . "\n";
-    echo "MYSQLDATABASE: " . $db_name . "\n";
-    echo "MYSQLUSER:     " . $db_user . "\n";
-    echo "MYSQLPASSWORD: " . ($db_pass_exists ? 'Existe (oculta por segurança)' : 'NÃO EXISTE') . "\n\n";
-    echo "Se você vê isso, o problema é outro. Mas se não, continue lendo.\n\n";
-} else {
-    echo "❌ FALHA CRÍTICA! Nenhuma variável como 'MYSQLHOST' foi encontrada.\n";
-    echo "Isso prova que o serviço PHP não está recebendo as informações do serviço de Banco de Dados, apesar de estarem ligados na interface.\n";
-    echo "Isso pode ser um bug ou um atraso na sincronização do Railway.\n\n";
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-echo "--- LISTA COMPLETA DE TODAS AS VARIÁVEIS DISPONÍVEIS ---\n";
-print_r(getenv());
+require 'php/conexao.php';
 
+$remembered_email = isset($_COOKIE['remembered_email']) ? htmlspecialchars($_COOKIE['remembered_email']) : '';
+$erro = null;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (empty($_POST['email']) || empty($_POST['senha'])) {
+        $erro = "Preencha todos os campos.";
+    } else {
+        try {
+            $email = $_POST['email'];
+            $senha_digitada = $_POST['senha'];
+
+            $sql_code = "SELECT * FROM usuarios WHERE email = :email";
+            $stmt = $pdo->prepare($sql_code);
+            $stmt->execute(['email' => $email]);
+            $usuario = $stmt->fetch();
+
+            if ($usuario && password_verify($senha_digitada, $usuario['senha'])) {
+                session_regenerate_id(true); 
+                
+                $_SESSION['id'] = $usuario['id'];
+                $_SESSION['nome'] = $usuario['nome'];
+                
+                setcookie("remembered_email", $_POST['email'], time() + (86400 * 30), "/");
+
+                header("Location: php/viagens.php");
+                exit();
+            } else {
+                $erro = "Falha ao logar! E-mail ou senha incorretos.";
+            }
+        } catch (PDOException $e) {
+            error_log("Erro de Login: " . $e->getMessage());
+            $erro = "Falha no sistema. Tente novamente mais tarde.";
+        }
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
