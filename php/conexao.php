@@ -3,22 +3,16 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$database_url = getenv('DATABASE_URL');
+$host = getenv('MYSQLHOST');
+$db   = getenv('MYSQLDATABASE');
+$user = getenv('MYSQLUSER');
+$pass = getenv('MYSQLPASSWORD');
+$port = getenv('MYSQLPORT');
 
-if ($database_url) {
-  
-    $url_parts = parse_url($database_url);
-    
-    $host = $url_parts['host'];
-    $user = $url_parts['user'];
-    $pass = $url_parts['pass'];
-    $db   = ltrim($url_parts['path'], '/');
-    $port = $url_parts['port'];
 
-} else {
-   
-    $host = '127.0.0.1'; 
-    $db   = 'nuvvo_db';  
+if (empty($host)) {
+    $host = '127.0.0.1';
+    $db   = 'nuvvo_db';
     $user = 'root';
     $pass = '';
     $port = '3306';
@@ -34,10 +28,8 @@ $options = [
 ];
 
 try {
-   
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
-   
     error_log("DATABASE CONNECTION ERROR: " . $e->getMessage());
     die("Desculpe, estamos com problemas técnicos. Tente novamente mais tarde.");
 }
