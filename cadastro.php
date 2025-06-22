@@ -1,6 +1,6 @@
 <?php
 
-include('php/conexao.php');
+require '../php/conexao.php';
 
 $erro = null;
 
