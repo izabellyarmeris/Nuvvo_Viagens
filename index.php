@@ -1,10 +1,6 @@
 <?php
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-// ... continuação é aqui ...
-
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -48,7 +44,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -72,7 +67,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="subtitle">Acesse sua conta para continuar sua jornada.</p>
                 
                 <?php if ($erro): ?>
-                    <p class="mensagem erro"><?php echo htmlspecialchars($erro); ?></p>
+                    <p style="color: #ff00c1; background-color: rgba(255,0,193,0.1); padding: 10px; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #ff00c1;">
+                        <?php echo htmlspecialchars($erro); ?>
+                    </p>
                 <?php endif; ?>
             </div>
             
@@ -89,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
 
             <div class="card-footer">
-                <a href="#" class="footer-link">Esqueceu sua senha?</a>
+                <a href="#">Esqueceu sua senha?</a>
                 <a href="cadastro.php" class="footer-link">Não tem uma conta? <strong>Cadastre-se</strong></a>
             </div>
         </div>
