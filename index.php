@@ -6,6 +6,11 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
+$remembered_email = ""; 
+if (isset($_COOKIE['remembered_email'])) {
+    $remembered_email = htmlspecialchars($_COOKIE['remembered_email']);
+}
+
 $erro = null;
 
 if (isset($_POST['email']) && isset($_POST['senha'])) {
@@ -15,28 +20,35 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
     } else if (strlen($_POST['senha']) == 0) {
         $erro = "Preencha sua senha";
     } else {
-        $email = $mysqli->real_escape_string($_POST['email']);
-        $senha_digitada = $_POST['senha'];
+        
+        try {
+            $email = $_POST['email'];
+            $senha_digitada = $_POST['senha'];
 
-        $sql_code = "SELECT * FROM usuarios WHERE email = '$email'";
-        $sql_query = $mysqli->query($sql_code) or die("Falha na execução do código SQL: " . $mysqli->error);
+            $sql_code = "SELECT * FROM usuarios WHERE email = :email";
+            $stmt = $pdo->prepare($sql_code);
+           
+            $stmt->execute(['email' => $email]);
+           
+            $usuario = $stmt->fetch();
 
-        if ($sql_query->num_rows == 1) {
-            $usuario = $sql_query->fetch_assoc();
-            
-            if (password_verify($senha_digitada, $usuario['senha'])) {
-                
+            if ($usuario && password_verify($senha_digitada, $usuario['senha'])) {
+             
                 $_SESSION['id'] = $usuario['id'];
                 $_SESSION['nome'] = $usuario['nome'];
-                
+             
                 header("Location: php/viagens.php");
                 exit();
 
             } else {
+               
                 $erro = "Falha ao logar! E-mail ou senha incorretos.";
             }
-        } else {
-            $erro = "Falha ao logar! E-mail ou senha incorretos.";
+
+        } catch (PDOException $e) {
+          
+            $erro = "Falha no sistema. Tente novamente mais tarde.";
+           
         }
     }
 }
@@ -57,22 +69,21 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
 
     <main class="login-container">
         <div class="background-overlay"></div>
-
         <div class="login-card">
             <div class="card-header">
                 <img src="midia/logo.viagens.png" alt="Logo NUVSO" class="logo">
                 <h1 class="title">Bem-vindo de Volta</h1>
                 <p class="subtitle">Acesse sua conta para continuar sua jornada.</p>
                 
-                <?php if($erro !== null) { ?>
+                <?php if ($erro): ?>
                     <p style="color: #ff00c1; margin-bottom: 1.5rem;"><?php echo $erro; ?></p>
-                <?php } ?>
+                <?php endif; ?>
             </div>
             
             <form action="" method="POST" class="login-form">
                 <div class="input-group">
                     <i class="fas fa-envelope input-icon"></i>
-                    <input type="email" id="email" name="email" placeholder="Seu e-mail" required autofocus />
+                    <input type="email" id="email" name="email" placeholder="Seu e-mail" value="<?php echo $remembered_email; ?>" required autofocus />
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock input-icon"></i>
