@@ -1,58 +1,54 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+// ... continuação é aqui ...
 
-require '../php/conexao.php';
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
-if (!isset($_SESSION)) {
+if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$remembered_email = ""; 
-if (isset($_COOKIE['remembered_email'])) {
-    $remembered_email = htmlspecialchars($_COOKIE['remembered_email']);
-}
+require 'php/conexao.php';
 
+$remembered_email = isset($_COOKIE['remembered_email']) ? htmlspecialchars($_COOKIE['remembered_email']) : '';
 $erro = null;
 
-if (isset($_POST['email']) && isset($_POST['senha'])) {
-
-    if (strlen($_POST['email']) == 0) {
-        $erro = "Preencha seu e-mail";
-    } else if (strlen($_POST['senha']) == 0) {
-        $erro = "Preencha sua senha";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (empty($_POST['email']) || empty($_POST['senha'])) {
+        $erro = "Preencha todos os campos.";
     } else {
-        
         try {
             $email = $_POST['email'];
             $senha_digitada = $_POST['senha'];
 
             $sql_code = "SELECT * FROM usuarios WHERE email = :email";
             $stmt = $pdo->prepare($sql_code);
-           
             $stmt->execute(['email' => $email]);
-           
             $usuario = $stmt->fetch();
 
             if ($usuario && password_verify($senha_digitada, $usuario['senha'])) {
-             
+                session_regenerate_id(true); 
+                
                 $_SESSION['id'] = $usuario['id'];
                 $_SESSION['nome'] = $usuario['nome'];
-             
+                
+                setcookie("remembered_email", $_POST['email'], time() + (86400 * 30), "/");
+
                 header("Location: php/viagens.php");
                 exit();
-
             } else {
-               
                 $erro = "Falha ao logar! E-mail ou senha incorretos.";
             }
-
         } catch (PDOException $e) {
-          
+            error_log("Erro de Login: " . $e->getMessage());
             $erro = "Falha no sistema. Tente novamente mais tarde.";
-           
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -76,11 +72,11 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
                 <p class="subtitle">Acesse sua conta para continuar sua jornada.</p>
                 
                 <?php if ($erro): ?>
-                    <p style="color: #ff00c1; margin-bottom: 1.5rem;"><?php echo $erro; ?></p>
+                    <p class="mensagem erro"><?php echo htmlspecialchars($erro); ?></p>
                 <?php endif; ?>
             </div>
             
-            <form action="" method="POST" class="login-form">
+            <form action="index.php" method="POST" class="login-form">
                 <div class="input-group">
                     <i class="fas fa-envelope input-icon"></i>
                     <input type="email" id="email" name="email" placeholder="Seu e-mail" value="<?php echo $remembered_email; ?>" required autofocus />
